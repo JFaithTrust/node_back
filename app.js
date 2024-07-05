@@ -1,42 +1,23 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const postModel = require('./models/post.model');
+const fileUpload = require('express-fileupload');
+const cookieParser = require('cookie-parser');
+const errorMiddleware = require('./middlewares/error.middleware');
+const cors = require('cors');
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
+app.use(cookieParser({}));
+app.use(express.static('static'));
+app.use(fileUpload({}));
 
-app.get('/', async (req, res) => {
-  try{
-    const posts = await postModel.find();
-    res.status(200).send(posts);
-  }catch (error) {
-    res.status(500).send(error);
-  }
-});
+app.use('/api/post', require('./routes/post.route'));
+app.use('/api/auth', require('./routes/auth.route'));
 
-app.post('/', async (req, res) => {
-  try {
-    const {title, content} = req.body;
-    const newPost = await postModel.create({title, content});
-    res.status(200).send(newPost);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-})
-
-app.delete('/:id', (req, res) => {
-  const {id} = req.params;
-  res.status(200).send(`Delete user with id ${id}`);
-});
-
-app.put('/:id', (req, res) => {
-  const {id} = req.params;
-  const {fistName, lastName} = req.body;
-  const message = `Update user with id ${id} to ${fistName} ${lastName}`;
-  res.status(200).send(message);
-})
+app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 8080;
 
