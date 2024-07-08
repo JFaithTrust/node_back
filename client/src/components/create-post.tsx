@@ -12,10 +12,12 @@ import {ChangeEvent, useState} from "react";
 import {Label} from "@/components/ui/label.tsx";
 import $axios from "@/http";
 import {toast} from "sonner";
+import {postStore} from "@/store/post.store.ts";
 
 const CreatePost = () => {
   const [loading, setLoading] = useState(false)
   const [picture, setPicture] = useState<File | null>(null)
+  const { posts, setPosts } = postStore()
   const {isOpen, onClose} = useCreatePost()
 
   const form = useForm<z.infer<typeof postSchema>>({
@@ -33,7 +35,12 @@ const CreatePost = () => {
 
     const promise = $axios
       .post('/post/create', formData)
-      .then(res => console.log(res))
+      .then(res => {
+        const newPost = [...posts, res.data]
+        setPosts(newPost)
+        form.reset()
+        onClose()
+      })
       .finally(() => setLoading(false))
 
 
